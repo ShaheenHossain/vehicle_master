@@ -30,7 +30,7 @@
                             <field name="brand_id"/>
                             <field name="model_id"/>
                             <field name="year"/>
-                            <field name="variant"/>
+                            <field name="variant_id"/>
                             <field name="license_plate"/>
                             <field name="vin"/>
                             <field name="color"/>

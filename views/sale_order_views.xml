@@ -7,9 +7,19 @@
         <field name="inherit_id" ref="sale.view_order_form"/>
         <field name="arch" type="xml">
 
+<!--
             <xpath expr="//field[@name='partner_id']" position="after">
-                <field name="vehicle_ids" widget="many2many_tags" domain="[('partner_id','=',partner_id)]"/>
+                <field name="vehicle_ids" widget="many2many_tags" domain="[('partner_id', '=', partner_id)]"
+                       options="{'no_create': True}"/>
             </xpath>
+-->
+
+            <xpath expr="//field[@name='partner_id']" position="after">
+                <field name="vehicle_id"
+                       domain="[('partner_id', '=', partner_id)]"
+                       options="{'no_create': True}"/>
+            </xpath>
+
 
             <xpath expr="//field[@name='validity_date']" position="after">
                 <field name="your_ref"/>
@@ -18,8 +28,199 @@
                 <field name="deadline_date"/>
             </xpath>
 
-
         </field>
     </record>
 
+
+    <record id="vehicle_view_account_form" model="ir.ui.view">
+        <field name="name">account.move.line.inherit</field>
+        <field name="model">account.move</field>
+        <field name="inherit_id" ref="account.view_move_form"/>
+        <field name="arch" type="xml">
+            <field name="invoice_date" position="after">
+                <field name="your_ref"/>
+                <field name="our_ref"/>
+                <field name="inquiry_date"/>
+                <field name="deadline_date"/>
+            </field>
+        </field>
+    </record>
+
+
+<!--Perfectly working only delivery slip is not workig-->
+<!--
+    <template id="external_layout_din5008_inherit" inherit_id="l10n_din5008.external_layout_din5008">
+        <xpath expr="//div[contains(@class, 'information_block')]/table" position="after">
+            <table style="width: 100%; margin-top: 10px;">
+                <tr t-if="o.your_ref">
+                    <td style="width: 30%;">Your Ref:</td>
+                    <td style="padding-right: 27px;">
+                        <span t-field="o.your_ref.name"/>
+                    </td>
+                </tr>
+                <tr t-if="o.our_ref">
+                    <td>Our Ref:</td>
+                    <td style="padding-right: 27px;">
+                        <span t-field="o.our_ref.name"/>
+                    </td>
+                </tr>
+                <tr t-if="o.inquiry_date">
+                    <td>Inquiry Date:</td>
+                    <td style="padding-right: 27px;">
+                        <span t-field="o.inquiry_date" t-options='{"widget": "date"}'/>
+                    </td>
+                </tr>
+                <tr t-if="o.deadline_date">
+                    <td>Deadline:</td>
+                    <td style="padding-right: 27px;">
+                        <span t-field="o.deadline_date" t-options='{"widget": "date"}'/>
+                    </td>
+                </tr>
+                <tr t-if="o.vehicle_ids">
+                    <td>Vehicle(s):</td>
+                    <td style="padding-right: 27px;">
+                        <span t-esc="', '.join(o.vehicle_ids.mapped('license_plate'))"/>
+                    </td>
+                </tr>
+            </table>
+        </xpath>
+    </template>
+-->
+
+    <template id="external_layout_din5008_inherit" inherit_id="l10n_din5008.external_layout_din5008">
+    <xpath expr="//div[contains(@class, 'information_block')]/table" position="after">
+        <table t-if="o._name in ['sale.order', 'account.move']" style="width: 100%; margin-top: 10px;">
+
+            <tr t-if="o._fields.get('your_ref') and o.your_ref">
+                <td style="width: 30%;">Your Ref:</td>
+                <td style="padding-right: 27px;">
+                    <span t-field="o.your_ref.name"/>
+                </td>
+            </tr>
+            <tr t-if="o._fields.get('our_ref') and o.our_ref">
+                <td>Our Ref:</td>
+                <td style="padding-right: 27px;">
+                    <span t-field="o.our_ref.name"/>
+                </td>
+            </tr>
+            <tr t-if="o._fields.get('inquiry_date') and o.inquiry_date">
+                <td>Inquiry Date:</td>
+                <td style="padding-right: 27px;">
+                    <span t-field="o.inquiry_date" t-options='{"widget": "date"}'/>
+                </td>
+            </tr>
+            <tr t-if="o._fields.get('deadline_date') and o.deadline_date">
+                <td>Deadline:</td>
+                <td style="padding-right: 27px;">
+                    <span t-field="o.deadline_date" t-options='{"widget": "date"}'/>
+                </td>
+            </tr>
+            <tr t-if="o._fields.get('vehicle_ids') and o.vehicle_ids">
+                <td>Vehicle(s):</td>
+<!--                <td style="padding-right: 27px;">
+                    <span t-esc="', '.join(o.vehicle_ids.mapped('license_plate'))"/>
+                </td>-->
+
+
+                <td style="padding-right: 27px;">
+                    <span t-esc="', '.join(o.vehicle_ids.mapped(lambda v: ' '.join(filter(None, [v.brand_id.name, v.model_id.name, str(v.year) if v.year else False]))))"/>
+                </td>
+            </tr>
+
+            <tr t-if="o._fields.get('license_plate') and o.license_plate">
+                <td>Our Ref:</td>
+                <td style="padding-right: 27px;">
+                    <span t-field="o.license_plate.name"/>
+                </td>
+            </tr>
+
+            <tr t-if="o._fields.get('vin') and o.vin">
+                <td>Our Ref:</td>
+                <td style="padding-right: 27px;">
+                    <span t-field="o.vin.name"/>
+                </td>
+            </tr>
+
+            <tr t-if="o._fields.get('master_number') and o.master_number">
+                <td>Our Ref:</td>
+                <td style="padding-right: 27px;">
+                    <span t-field="o.master_number.name"/>
+                </td>
+            </tr>
+
+        </table>
+    </xpath>
+</template>
+
+
+
+
+
+
+    <template id="vehicle_custom_content" inherit_id="sale.sale_order_portal_content">
+        <xpath expr="//tbody[@id='sale_info_table']" position="after">
+            <table class="table table-borderless table-sm">
+                <tbody>
+                    <tr t-if="sale_order.your_ref" style="font-size: 14px;">
+                        <th class="ps-0 pb-0" style="font-weight: bold;">Your Ref:</th>
+<!--                        <td class="pb-0" t-field="sale_order.your_ref.name"/>-->
+                        <td class="pb-0">
+                            <span t-field="sale_order.your_ref"/>
+                        </td>
+
+                    </tr>
+                    <tr t-if="sale_order.our_ref" style="font-size: 14px;">
+                        <th class="ps-0 pb-0" style="font-weight: bold;">Our Ref:</th>
+<!--                        <td class="pb-0" t-field="sale_order.our_ref.name"/>-->
+
+
+                        <td class="pb-0">
+                            <span t-field="sale_order.our_ref"/>
+                        </td>
+
+                    </tr>
+                    <tr t-if="sale_order.inquiry_date" style="font-size: 14px;">
+                        <th class="ps-0 pb-0" style="font-weight: bold;">Inquiry Date:</th>
+                        <td class="pb-0" t-esc="sale_order.inquiry_date.strftime('%d.%m.%Y')"/>
+                    </tr>
+                    <tr t-if="sale_order.deadline_date" style="font-size: 14px;">
+                        <th class="ps-0 pb-0" style="font-weight: bold;">Deadline:</th>
+                        <td class="pb-0" t-esc="sale_order.deadline_date.strftime('%d.%m.%Y')"/>
+
+                    </tr>
+
+<!--
+                    <tr t-if="sale_order.vehicle_ids" style="font-size: 14px;">
+                        <th class="ps-0 pb-0" style="font-weight: bold;">Deadline:</th>
+                        <td class="pb-0" t-esc="sale_order.vehicle_ids.strftime('%d.%m.%Y')"/>
+
+                    </tr>
+
+                    <tr t-if="sale_order.license_plate" style="font-size: 14px;">
+                        <th class="ps-0 pb-0" style="font-weight: bold;">Deadline:</th>
+                        <td class="pb-0" t-esc="sale_order.license_plate.strftime('%d.%m.%Y')"/>
+                    </tr>
+
+                    <tr t-if="sale_order.vin" style="font-size: 14px;">
+                        <th class="ps-0 pb-0" style="font-weight: bold;">Deadline:</th>
+                        <td class="pb-0" t-esc="sale_order.vin.strftime('%d.%m.%Y')"/>
+                    </tr>
+
+
+                    <tr t-if="sale_order.master_number" style="font-size: 14px;">
+                        <th class="ps-0 pb-0" style="font-weight: bold;">Deadline:</th>
+                        <td class="pb-0" t-esc="sale_order.master_number.strftime('%d.%m.%Y')"/>
+                    </tr>
+-->
+
+
+                </tbody>
+            </table>
+        </xpath>
+    </template>
+
+
+
 </odoo>
+
+

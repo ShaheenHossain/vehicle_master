@@ -6,32 +6,16 @@ class VehicleMaster(models.Model):
     _description = 'Vehicle'
 
     # Owner
-    partner_id = fields.Many2one(
-        'res.partner',
-        string='Owner',
-        required=True
-    )
-
+    partner_id = fields.Many2one('res.partner', string='Owner', required=True)
 
     brand_id = fields.Many2one('vehicle.brand', string='Brand')
-    model_id = fields.Many2one(
-        'vehicle.model',
-        string='Model',
-        domain="[('brand_id','=',brand_id)]"
-    )
-
-    year = fields.Selection(
-        [(str(y), str(y)) for y in range(1980, 2031)],
-        string='Year'
-    )
-
-    variant = fields.Char(string='Variant')
-
-    license_plate = fields.Char(
-        string='License Plate',
-        required=True
-    )
-
+    model_id = fields.Many2one('vehicle.model', string='Model', domain="[('brand_id','=',brand_id)]")
+    year = fields.Selection([(str(y), str(y)) for y in range(1980, 2031)], string='Year')
+    year_from = fields.Integer(string="Year From")
+    year_to = fields.Integer(string="Year To")
+    # variant = fields.Char(string='Variant')
+    variant_id = fields.Many2one('vehicle.variant', string='Variant', domain="[('model_id','=',model_id)]")
+    license_plate = fields.Char(string='License Plate', required=True)
     vin = fields.Char(string='Chassis Number')
     color = fields.Char(string='Color')
     fuel_type = fields.Char(string='Fuel Type')
@@ -44,34 +28,17 @@ class VehicleMaster(models.Model):
     master_number = fields.Char(string='Master Number', readonly=True, copy=False)
     last_service_date = fields.Date(string='Last Service Date')
 
-    # vehicle_id = fields.Many2one(
-    #     'vehicle.master',
-    #     string="Vehicle"
-    # )
+    vehicle_id = fields.Many2one('vehicle.master', string="Vehicle")
 
     name = fields.Char(string='Vehicle Name', compute='_compute_vehicle_name', store=True)
 
-    @api.depends('partner_id', 'brand_id', 'model_id')
+    @api.depends('brand_id', 'model_id', 'year')
     def _compute_vehicle_name(self):
         for vehicle in self:
-            owner = vehicle.partner_id.name if vehicle.partner_id else 'Unknown'
-            brand = vehicle.brand_id.name if vehicle.brand_id else 'Brand'
-            model = vehicle.model_id.name if vehicle.model_id else 'Model'
-            vehicle.name = f"{owner} - {brand} {model}"
-
-
-
-
-    @api.depends('partner_id', 'brand_id', 'model_id', 'year')
-    def _compute_vehicle_name(self):
-        for vehicle in self:
-            owner = vehicle.partner_id.name if vehicle.partner_id else 'Unknown'
             brand = vehicle.brand_id.name if vehicle.brand_id else 'Brand'
             model = vehicle.model_id.name if vehicle.model_id else 'Model'
             year = vehicle.year or ''
-            vehicle.name = f"{owner} - {brand} {model} {year}".strip()
-
-
+            vehicle.name = f"{brand} {model} {year}".strip()
 
 
     @api.model
@@ -97,11 +64,7 @@ class VehicleMaster(models.Model):
 class ResPartner(models.Model):
     _inherit = 'res.partner'
 
-    vehicle_ids = fields.One2many(
-        'vehicle.master',
-        'partner_id',
-        string='Vehicles'
-    )
+    vehicle_ids = fields.One2many('vehicle.master', 'partner_id', string='Vehicles')
 
 
 class VehicleBrand(models.Model):
@@ -114,10 +77,7 @@ class VehicleBrand(models.Model):
 
     active = fields.Boolean(default=True)
 
-    model_count = fields.Integer(
-        string="Model Count",
-        compute="_compute_model_count"
-    )
+    model_count = fields.Integer(string="Model Count", compute="_compute_model_count")
 
     @api.depends('model_ids')
     def _compute_model_count(self):
@@ -140,4 +100,21 @@ class VehicleModel(models.Model):
         ('model_brand_unique',
          'unique(name, brand_id)',
          'Model already exists for this brand!')
+    ]
+
+
+class VehicleVariant(models.Model):
+    _name = 'vehicle.variant'
+    _description = 'Vehicle Variant'
+
+    name = fields.Char(required=True)
+    model_id = fields.Many2one('vehicle.model', required=True, ondelete='cascade' )
+
+    year_from = fields.Integer(string="Year From")
+    year_to = fields.Integer(string="Year To")
+
+    _sql_constraints = [
+        ('variant_unique',
+         'unique(name, model_id)',
+         'Variant already exists for this model!')
     ]

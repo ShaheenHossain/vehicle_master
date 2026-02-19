@@ -4,11 +4,11 @@
     'category': 'Garage',
     'depends': [
         'base',
-        # 'contacts',
-        # 'mail',
+        'contacts',
+        'mail',
         'sale',
-        # 'account',
-        # 'stock',   # ✅ VERY IMPORTANT
+        'account',
+        'stock',   # ✅ VERY IMPORTANT
     ],
     'data': [
         'security/ir.model.access.csv',
