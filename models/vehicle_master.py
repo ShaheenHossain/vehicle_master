@@ -8,6 +8,10 @@ class VehicleMaster(models.Model):
     # Owner
     partner_id = fields.Many2one('res.partner', string='Owner', required=True)
 
+    your_ref = fields.Many2one('res.partner', string='Your Ref')
+    our_ref = fields.Many2one('res.partner', string='Our Ref')
+
+
     brand_id = fields.Many2one('vehicle.brand', string='Brand')
     model_id = fields.Many2one('vehicle.model', string='Model', domain="[('brand_id','=',brand_id)]")
     year = fields.Selection([(str(y), str(y)) for y in range(1980, 2031)], string='Year')
@@ -16,9 +20,43 @@ class VehicleMaster(models.Model):
     # variant = fields.Char(string='Variant')
     variant_id = fields.Many2one('vehicle.variant', string='Variant', domain="[('model_id','=',model_id)]")
     license_plate = fields.Char(string='License Plate', required=True)
-    vin = fields.Char(string='Chassis Number')
-    color = fields.Char(string='Color')
-    fuel_type = fields.Char(string='Fuel Type')
+    vin = fields.Char(string='VIN/Chassis Number')
+    color_id = fields.Many2one('vehicle.color', string='Color')
+
+    # fuel_type = fields.Char(string='Fuel Type')
+
+    def name_get(self):
+        result = []
+        for vehicle in self:
+            name_parts = []
+            if vehicle.brand_id:
+                name_parts.append(vehicle.brand_id.name)
+            if vehicle.model_id:
+                name_parts.append(vehicle.model_id.name)
+            if vehicle.variant_id:
+                name_parts.append(vehicle.variant_id.name)
+            if vehicle.year:
+                name_parts.append(vehicle.year)
+            # Combine all parts
+            full_name = ' '.join(name_parts)
+            result.append((vehicle.id, full_name))
+        return result
+
+
+    fuel_type = fields.Selection(
+        [
+            ('petrol', 'Petrol'),
+            ('diesel', 'Diesel'),
+            ('hybrid', 'Hybrid'),
+            ('electric', 'Electric'),
+            ('cng', 'CNG'),
+            ('octane', 'Octane'),
+            ('lpg', 'LPG'),
+        ],
+        string='Fuel Type'
+    )
+
+
 
     first_registration = fields.Date(string='First Registration')
     mileage = fields.Integer(string='Mileage')
@@ -32,13 +70,14 @@ class VehicleMaster(models.Model):
 
     name = fields.Char(string='Vehicle Name', compute='_compute_vehicle_name', store=True)
 
-    @api.depends('brand_id', 'model_id', 'year')
+    @api.depends('brand_id', 'model_id', 'year', 'year')
     def _compute_vehicle_name(self):
         for vehicle in self:
             brand = vehicle.brand_id.name if vehicle.brand_id else 'Brand'
             model = vehicle.model_id.name if vehicle.model_id else 'Model'
+            variant = vehicle.variant_id.name if vehicle.variant_id else 'variant'
             year = vehicle.year or ''
-            vehicle.name = f"{brand} {model} {year}".strip()
+            vehicle.name = f"{brand} {model} {variant} {year}".strip()
 
 
     @api.model
@@ -59,6 +98,13 @@ class VehicleMaster(models.Model):
         return f"{new[:3]}.{new[3:6]}.{new[6:]}"
 
 
+
+class VehicleColor(models.Model):
+    _name = 'vehicle.color'
+    _description = 'Vehicle Color'
+
+    name = fields.Char(string="Color Name", required=True)
+    active = fields.Boolean(default=True)
 
 
 class ResPartner(models.Model):

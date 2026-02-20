@@ -18,6 +18,7 @@
         # 'views/vehicle_brand_model_views.xml',
         'data/vehicle_master_sequence.xml',
         'data/vehicle_cars_data.xml',
+        # 'data/vehicle_color_data.xml',
         # 'data/vehicle.brand.csv',
     ],
     'installable': True,

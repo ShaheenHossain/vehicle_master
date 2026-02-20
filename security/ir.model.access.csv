@@ -3,3 +3,4 @@ access_vehicle_master,access.vehicle.master,model_vehicle_master,,1,1,1,1
 access_vehicle_brand,access.vehicle.brand,model_vehicle_brand,,1,1,1,1
 access_vehicle_model,access.vehicle.model,model_vehicle_model,,1,1,1,1
 access_vehicle_variant,access.vehicle.variant,model_vehicle_variant,,1,1,1,1
+access_vehicle_color,access.vehicle.color,model_vehicle_color,,1,1,1,1

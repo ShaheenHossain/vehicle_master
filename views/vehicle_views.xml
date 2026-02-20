@@ -7,12 +7,16 @@
         <field name="model">vehicle.master</field>
         <field name="arch" type="xml">
             <tree>
-                <field name="partner_id"/>
-                <field name="brand_id"/>
-                <field name="model_id"/>
-                <field name="year"/>
-                <field name="license_plate"/>
-                <field name="mileage"/>
+                <field name="partner_id" optional="show"/>
+                <field name="brand_id" optional="show"/>
+                <field name="model_id" optional="show"/>
+                <field name="year" optional="show"/>
+                <field name="variant_id" optional="show"/>
+                <field name="color_id" optional="show"/>
+                <field name="license_plate" optional="show"/>
+                <field name="mileage" optional="show"/>
+                <field name="your_ref" optional="show"/>
+                <field name="our_ref" optional="show"/>
             </tree>
         </field>
     </record>
@@ -33,7 +37,7 @@
                             <field name="variant_id"/>
                             <field name="license_plate"/>
                             <field name="vin"/>
-                            <field name="color"/>
+                            <field name="color_id"/>
                             <field name="fuel_type"/>
                         </group>
                         <group>
@@ -42,6 +46,8 @@
                             <field name="type_code"/>
                             <field name="master_number"/>
                             <field name="last_service_date"/>
+                            <field name="your_ref"/>
+                            <field name="our_ref"/>
                         </group>
                     </group>
                 </sheet>
