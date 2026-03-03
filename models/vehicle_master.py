@@ -70,26 +70,6 @@ class VehicleMaster(models.Model):
         """
         return True
 
-    # fuel_type = fields.Char(string='Fuel Type')
-
-    # def name_get(self):
-    #     result = []
-    #     for vehicle in self:
-    #         name_parts = []
-    #         if vehicle.brand_id:
-    #             name_parts.append(vehicle.brand_id.name)
-    #         if vehicle.model_id:
-    #             name_parts.append(vehicle.model_id.name)
-    #         if vehicle.variant_id:
-    #             name_parts.append(vehicle.variant_id.name)
-    #         if vehicle.year:
-    #             name_parts.append(vehicle.year)
-    #         # Combine all parts
-    #         full_name = ' '.join(name_parts)
-    #         result.append((vehicle.id, full_name))
-    #     return result
-
-
     fuel_type = fields.Selection(
         [
             ('petrol', 'Petrol'),
@@ -113,26 +93,6 @@ class VehicleMaster(models.Model):
 
     vehicle_id = fields.Many2one('vehicle.master', string="Vehicle")
 
-    # master_number = fields.Char(string='Master Number', readonly=True, copy=False)
-
-
-
-    # @api.model
-    # def create(self, vals):
-    #     if not vals.get('master_number'):
-    #         vals['master_number'] = self._generate_master_number()
-    #     return super(VehicleMaster, self).create(vals)
-    #
-    #
-    # @api.model
-    # def _generate_master_number(self):
-    #     last_vehicle = self.search([], order='id desc', limit=1)
-    #     if last_vehicle and last_vehicle.master_number:
-    #         last = last_vehicle.master_number.replace('.', '')
-    #         new = str(int(last) + 1).zfill(9)  # 9 digits
-    #     else:
-    #         new = '000000001'
-    #     return f"{new[:3]}.{new[3:6]}.{new[6:]}"
 
     # Vehicle Photos (Front, Back, Side)
     image_front = fields.Image(string="Front View", max_width=1920, max_height=1080)
