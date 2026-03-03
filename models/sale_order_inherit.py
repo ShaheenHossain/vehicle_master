@@ -21,7 +21,9 @@ class SaleOrder(models.Model):
     vehicle_id = fields.Many2one('vehicle.master', string='Vehicle', domain="[('partner_id','=',partner_id)]")
     license_plate = fields.Char(related='vehicle_id.license_plate', string='License Plate', required=True)
 
-    first_registration = fields.Date(string='First Registration')
+    # first_registration = fields.Date(string='First Registration', store=True, readonly=False)
+    first_registration = fields.Date(related='vehicle_id.first_registration', string='First Registration', store=True, readonly=False)
+
     mileage = fields.Integer(string='Mileage')
 
     type_code = fields.Char(string='Type Code')
@@ -31,7 +33,7 @@ class SaleOrder(models.Model):
 
     fuel_type = fields.Selection(related='vehicle_id.fuel_type', store=True, readonly=False)
     master_number = fields.Char(related='vehicle_id.master_number', store=True, readonly=False)
-    last_service_date = fields.Date(related='vehicle_id.last_service_date', store=True, readonly=False)
+    last_service_date = fields.Date(related='vehicle_id.last_service_date', string='Last Service Date', store=True, readonly=False)
 
     @api.onchange('partner_id')
     def _onchange_partner_id_vehicle_id(self):
@@ -62,6 +64,7 @@ class SaleOrder(models.Model):
             # Add these also if needed
             'fuel_type': self.fuel_type,
             'master_number': self.master_number,
+            'first_registration': self.first_registration,
             'last_service_date': self.last_service_date,
         })
 
@@ -69,37 +72,79 @@ class SaleOrder(models.Model):
 
 
 
+# class AccountMove(models.Model):
+#     _inherit = 'account.move'
+#
+#
+#     inquiry_date = fields.Date(string="Inquiry Date")
+#     deadline_date = fields.Date(string="Deadline")
+#
+#     your_ref = fields.Many2one('res.partner', string='Your Ref')
+#     our_ref = fields.Many2one('res.partner', string='Our Ref')
+#
+#     vehicle_ids = fields.Many2many('vehicle.master', 'account_move_vehicle_rel',
+#             'move_id', 'vehicle_id', string='Vehicles')
+#
+#     vehicle_id = fields.Many2one('vehicle.master', string='Vehicle')
+#
+#     license_plate = fields.Char(string='License Plate')
+#
+#     vin = fields.Char(string='VIN/Chassis Number')
+#     # color_id = fields.Many2one('vehicle.color', related='vehicle_id.color_id', store=True)
+#     # color_id = fields.Char(related='vehicle_id.color_id.name', store=True, string="Color")
+#     color_id = fields.Many2one('vehicle.color', related='vehicle_id.color_id', store=True)
+#
+#
+#     fuel_type = fields.Char(string='Fuel Type')
+#
+#     first_registration = fields.Date(string='First Registration')
+#     mileage = fields.Integer(string='Mileage')
+#
+#     type_code = fields.Char(string='Type Code')
+#     master_number = fields.Char(string='Master Number', readonly=True, copy=False)
+#     last_service_date = fields.Date(string='Last Service Date')
+
+
 class AccountMove(models.Model):
     _inherit = 'account.move'
-
 
     inquiry_date = fields.Date(string="Inquiry Date")
     deadline_date = fields.Date(string="Deadline")
 
-    your_ref = fields.Many2one('res.partner', string='Your Ref', required=True)
-    our_ref = fields.Many2one('res.partner', string='Our Ref', required=True)
+    # Change these to related to match Sale Order behavior
+    your_ref = fields.Many2one('res.partner', related='vehicle_id.your_ref', string='Your Ref', store=True)
+    our_ref = fields.Many2one('res.partner', related='vehicle_id.our_ref', string='Our Ref', store=True)
 
-    vehicle_ids = fields.Many2many('vehicle.master', 'account_move_vehicle_rel',
-            'move_id', 'vehicle_id', string='Vehicles')
+    vehicle_id = fields.Many2one('vehicle.master', string='Vehicle', domain="[('partner_id','=',partner_id)]")
 
-    vehicle_id = fields.Many2one('vehicle.master', string='Vehicle')
+    # Adding 'related' allows these to fill automatically when vehicle_id is selected
+    license_plate = fields.Char(related='vehicle_id.license_plate', string='License Plate', store=True, readonly=False)
+    vin = fields.Char(related='vehicle_id.vin', string='VIN/Chassis Number', store=True, readonly=False)
+    color_id = fields.Many2one('vehicle.color', related='vehicle_id.color_id', string="Color", store=True)
+    fuel_type = fields.Selection(related='vehicle_id.fuel_type', string='Fuel Type', store=True, readonly=False)
 
-    license_plate = fields.Char(string='License Plate', required=True)
+    master_number = fields.Char(related='vehicle_id.master_number', string='Master Number', store=True, readonly=False)
+    first_registration = fields.Date(related='vehicle_id.first_registration', string='First Registration', store=True,
+                                     readonly=False)
+    last_service_date = fields.Date(related='vehicle_id.last_service_date', string='Last Service Date', store=True,
+                                    readonly=False)
 
-    vin = fields.Char(string='VIN/Chassis Number')
-    # color_id = fields.Many2one('vehicle.color', related='vehicle_id.color_id', store=True)
-    # color_id = fields.Char(related='vehicle_id.color_id.name', store=True, string="Color")
-    color_id = fields.Many2one('vehicle.color', related='vehicle_id.color_id', store=True)
-
-
-    fuel_type = fields.Char(string='Fuel Type')
-
-    first_registration = fields.Date(string='First Registration')
+    # These usually stay manual per invoice
     mileage = fields.Integer(string='Mileage')
-
     type_code = fields.Char(string='Type Code')
-    master_number = fields.Char(string='Master Number', readonly=True, copy=False)
-    last_service_date = fields.Date(string='Last Service Date')
+
+    # This handles the filtering of vehicles when you select a customer on the Invoice
+    @api.onchange('partner_id')
+    def _onchange_partner_id_vehicle_id(self):
+        self.vehicle_id = False
+        if self.partner_id:
+            return {
+                'domain': {
+                    'vehicle_id': [('partner_id', '=', self.partner_id.id)]
+                }
+            }
+        return {'domain': {'vehicle_id': []}}
+
 
 
 
@@ -109,8 +154,8 @@ class StockPicking(models.Model):
     inquiry_date = fields.Date(string="Inquiry Date")
     deadline_date = fields.Date(string="Deadline")
 
-    your_ref = fields.Many2one('res.partner', string='Your Ref', required=True)
-    our_ref = fields.Many2one('res.partner', string='Our Ref', required=True)
+    your_ref = fields.Many2one('res.partner', string='Your Ref')
+    our_ref = fields.Many2one('res.partner', string='Our Ref')
 
     # vehicle_ids = fields.Many2many('vehicle.master', 'account_move_vehicle_rel',
     #         'move_id', 'vehicle_id', string='Vehicles')
@@ -119,3 +164,4 @@ class StockPicking(models.Model):
         'vehicle.master',
         string='Vehicle'
     )
+

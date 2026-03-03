@@ -6,19 +6,10 @@
         <field name="model">sale.order</field>
         <field name="inherit_id" ref="sale.view_order_form"/>
         <field name="arch" type="xml">
-
-<!--
-            <xpath expr="//field[@name='partner_id']" position="after">
-                <field name="vehicle_ids" widget="many2many_tags" domain="[('partner_id', '=', partner_id)]"
-                       options="{'no_create': True}"/>
-            </xpath>
--->
-
             <xpath expr="//field[@name='partner_id']" position="after">
                 <field name="vehicle_id"
                        domain="[('partner_id', '=', partner_id)]"
                        options="{'no_create': True}"/>
-
                 <field name="license_plate"/>
                 <field name="vin"/>
                 <field name="color_id"/>
@@ -26,7 +17,6 @@
                 <field name="master_number"/>
                 <field name="last_service_date"/>
             </xpath>
-
 
             <xpath expr="//field[@name='validity_date']" position="after">
                 <field name="your_ref"/>
@@ -37,6 +27,92 @@
 
         </field>
     </record>
+
+
+    <template id="vehicle_custom_content" inherit_id="sale.sale_order_portal_content">
+        <xpath expr="//div[@id='informations']" position="after">
+            <style>
+                .vehicle-full-width-container {
+                width: 100%;
+                margin-top: 15px; /* Reduced margin */
+                margin-bottom: 15px;
+                }
+                .vehicle-table {
+                width: 100%;
+                border-collapse: collapse;
+                table-layout: fixed;
+                }
+                .vehicle-table th, .vehicle-table td {
+                border: none;       /* 0.5pt solid #D3D3D3; Thinner 0.5pt grey border */
+                padding: 4px 8px; /* Compact padding */
+                font-size: 12px; /* Slightly smaller font to save space */
+                vertical-align: middle;
+                line-height: 1.2; /* Forces rows to be thin */
+                }
+                .vehicle-table th {
+                background-color: #f8f9fa;
+                font-weight: bold;
+                width: 18%; /* Adjusted for better balance */
+                text-align: left;
+                color: #444;
+                }
+                .vehicle-table td {
+                width: 32%;
+                color: #000;
+                }
+                /* Removes the header margin if you want it even tighter */
+                .vehicle-info-header {
+                font-size: 15px;
+                font-weight: bold;
+                margin-bottom: 5px;
+                }
+            </style>
+
+            <div class="vehicle-full-width-container">
+                <div class="vehicle-info-header">Vehicle Details</div>
+                <table class="vehicle-table">
+                    <tbody>
+                        <tr>
+                            <th>Vehicle:</th>
+                            <td><span t-field="sale_order.vehicle_id"/></td>
+                            <th>Your Ref:</th>
+                            <td><span t-field="sale_order.your_ref"/></td>
+                        </tr>
+                        <tr>
+                            <th>Our Ref:</th>
+                            <td><span t-field="sale_order.our_ref"/></td>
+                            <th>Inquiry Date:</th>
+                            <td><span t-field="sale_order.inquiry_date" t-options='{"widget":"date"}'/></td>
+                        </tr>
+                        <tr>
+                            <th>Deadline:</th>
+                            <td><span t-field="sale_order.deadline_date" t-options='{"widget":"date"}'/></td>
+                            <th>License Plate:</th>
+                            <td><span t-field="sale_order.license_plate"/></td>
+                        </tr>
+                        <tr>
+                            <th>VIN/Chassis No.:</th>
+                            <td><span t-field="sale_order.vin"/></td>
+                            <th>Master Number:</th>
+                            <td><span t-field="sale_order.master_number"/></td>
+                        </tr>
+                        <tr>
+                            <th>Color:</th>
+                            <td><span t-field="sale_order.color_id"/></td>
+                            <th>Fuel Type:</th>
+                            <td><span t-field="sale_order.fuel_type"/></td>
+                        </tr>
+                        <tr>
+                            <th>Last Service:</th>
+                            <td><span t-field="sale_order.last_service_date" t-options='{"widget":"date"}'/></td>
+                            <th>Year:</th>
+                            <td><span t-field="sale_order.year"/></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </xpath>
+    </template>
 
 
     <record id="vehicle_view_account_form" model="ir.ui.view">
@@ -57,7 +133,6 @@
                            readonly="state != 'draft'"/>
                 </div>
             </xpath>
-
 
             <xpath expr="//group[@id='header_left_group']/div[field[@name='vehicle_id']]" position="after">
 
@@ -105,152 +180,91 @@
     </record>
 
 
-
     <template id="external_layout_din5008_inherit" inherit_id="l10n_din5008.external_layout_din5008">
-    <xpath expr="//div[contains(@class, 'information_block')]/table" position="after">
-        <table t-if="o._name in ['sale.order', 'account.move']" style="width: 100%; margin-top: 10px;">
+        <xpath expr="//table[contains(@class, 'din_company_info')]" position="after">
+            <t t-if="o and o._name in ['sale.order', 'account.move']">
+                <style>
+                    .pdf-vehicle-container {
+                    width: 100%;
+                    display: block;
+                    clear: both;
+                    margin-top: <t t-if="report_type == 'pdf'">-50px</t><t t-else="">15px</t>;
+                    margin-bottom: 10px;
+                    }
+                    .pdf-vehicle-table {
+                    width: 100%;
+                    border-collapse: collapse !important;
+                    table-layout: fixed;
+                    border: none !important; /* 1px solid #AAAAAA !important; Outer border */
+                    }
+                    .pdf-vehicle-table th, .pdf-vehicle-table td {
+                    /* Using 1px and a slightly darker grey for PDF visibility */
+                    border: none !important;
+                    padding: 4px 8px !important;
+                    font-size: 9pt;
+                    vertical-align: middle;
+                    line-height: 1.1;
+                    }
+                    .pdf-vehicle-table th {
+                    background-color: #f8f9fa !important;
+                    font-weight: bold;
+                    width: 20%;
+                    text-align: left;
+                    color: #444;
+                    }
+                    .pdf-vehicle-table td {
+                    width: 30%;
+                    color: #000;
+                    }
+                </style>
 
-            <tr t-if="o._fields.get('vehicle_id') and o.vehicle_id">
-                <td style="width: 30%;">Vehicle:</td>
-                <td style="padding-right: 27px;">
-                    <span t-field="o.vehicle_id.name"/>
-                </td>
-            </tr>
+                <div class="pdf-vehicle-container">
+                    <table class="pdf-vehicle-table">
+                        <tbody>
+                            <tr>
+                                <th>Vehicle:</th>
+                                <td><span t-field="o.vehicle_id"/></td>
+                                <th>Your Ref:</th>
+                                <td><span t-field="o.your_ref"/></td>
+                            </tr>
+                            <tr>
+                                <th>Our Ref:</th>
+                                <td><span t-field="o.our_ref"/></td>
+                                <th>Inquiry Date:</th>
+                                <td><span t-field="o.inquiry_date" t-options='{"widget":"date"}'/></td>
+                            </tr>
+                            <tr>
+                                <th>Deadline:</th>
+                                <td><span t-field="o.deadline_date" t-options='{"widget":"date"}'/></td>
+                                <th>License Plate:</th>
+                                <td><span t-field="o.license_plate"/></td>
+                            </tr>
+                            <tr>
+                                <th>VIN/Chassis No.:</th>
+                                <td><span t-field="o.vin"/></td>
+                                <th>Master Number:</th>
+                                <td><span t-field="o.master_number"/></td>
+                            </tr>
 
-            <tr t-if="o._fields.get('your_ref') and o.your_ref">
-                <td style="width: 30%;">Your Ref:</td>
-                <td style="padding-right: 27px;">
-                    <span t-field="o.your_ref.name"/>
-                </td>
-            </tr>
-            <tr t-if="o._fields.get('our_ref') and o.our_ref">
-                <td>Our Ref:</td>
-                <td style="padding-right: 27px;">
-                    <span t-field="o.our_ref.name"/>
-                </td>
-            </tr>
-            <tr t-if="o._fields.get('inquiry_date') and o.inquiry_date">
-                <td>Inquiry Date:</td>
-                <td style="padding-right: 27px;">
-                    <span t-field="o.inquiry_date" t-options='{"widget": "date"}'/>
-                </td>
-            </tr>
-            <tr t-if="o._fields.get('deadline_date') and o.deadline_date">
-                <td>Deadline:</td>
-                <td style="padding-right: 27px;">
-                    <span t-field="o.deadline_date" t-options='{"widget": "date"}'/>
-                </td>
-            </tr>
-            <tr t-if="o._fields.get('vehicle_ids') and o.vehicle_ids">
-                <td>Vehicle(s):</td>
-<!--                <td style="padding-right: 27px;">
-                    <span t-esc="', '.join(o.vehicle_ids.mapped('license_plate'))"/>
-                </td>-->
+                            <tr>
+                                <th>Color:</th>
+                                <td><span t-field="o.color_id"/></td>
+                                <th>Fuel Type:</th>
+                                <td><span t-field="o.fuel_type"/></td>
+                            </tr>
 
-
-                <td style="padding-right: 27px;">
-                    <span t-esc="', '.join(o.vehicle_ids.mapped(lambda v: ' '.join(filter(None, [v.brand_id.name, v.model_id.name, str(v.year) if v.year else False]))))"/>
-                </td>
-            </tr>
-
-            <tr t-if="o._fields.get('license_plate') and o.license_plate">
-                <td>Licence Plate:</td>
-                <td style="padding-right: 27px;">
-                    <span t-field="o.license_plate"/>
-                </td>
-            </tr>
-
-            <tr t-if="o._fields.get('vin') and o.vin">
-                <td>VIN/Chesis No.:</td>
-                <td style="padding-right: 27px;">
-                    <span t-field="o.vin"/>
-                </td>
-            </tr>
-
-            <tr t-if="o._fields.get('master_number') and o.master_number">
-                <td>Master Number:</td>
-                <td style="padding-right: 27px;">
-                    <span t-field="o.master_number"/>
-                </td>
-            </tr>
-
-        </table>
-    </xpath>
-</template>
-
-
-
-
-
-
-    <template id="vehicle_custom_content" inherit_id="sale.sale_order_portal_content">
-        <xpath expr="//tbody[@id='sale_info_table']" position="after">
-            <table class="table table-borderless table-sm">
-                <tbody>
-
-                    <tr t-if="sale_order.vehicle_id" style="font-size: 14px;">
-                        <th class="ps-0 pb-0" style="font-weight: bold;">Vehicle:</th>
-                        <td class="pb-0">
-                            <span t-field="sale_order.vehicle_id"/>
-                        </td>
-
-                    </tr>
-
-                    <tr t-if="sale_order.your_ref" style="font-size: 14px;">
-                        <th class="ps-0 pb-0" style="font-weight: bold;">Your Ref:</th>
-                        <td class="pb-0">
-                            <span t-field="sale_order.your_ref"/>
-                        </td>
-
-                    </tr>
-                    <tr t-if="sale_order.our_ref" style="font-size: 14px;">
-                        <th class="ps-0 pb-0" style="font-weight: bold;">Our Ref:</th>
-                        <td class="pb-0">
-                            <span t-field="sale_order.our_ref"/>
-                        </td>
-
-                    </tr>
-                    <tr t-if="sale_order.inquiry_date" style="font-size: 14px;">
-                        <th class="ps-0 pb-0" style="font-weight: bold;">Inquiry Date:</th>
-                        <td class="pb-0" t-esc="sale_order.inquiry_date.strftime('%d.%m.%Y')"/>
-                    </tr>
-                    <tr t-if="sale_order.deadline_date" style="font-size: 14px;">
-                        <th class="ps-0 pb-0" style="font-weight: bold;">Deadline:</th>
-                        <td class="pb-0" t-esc="sale_order.deadline_date.strftime('%d.%m.%Y')"/>
-
-                    </tr>
-
-<!--
-                    <tr t-if="sale_order.vehicle_ids" style="font-size: 14px;">
-                        <th class="ps-0 pb-0" style="font-weight: bold;">Deadline:</th>
-                        <td class="pb-0" t-esc="sale_order.vehicle_ids.strftime('%d.%m.%Y')"/>
-
-                    </tr>
-
-                    <tr t-if="sale_order.license_plate" style="font-size: 14px;">
-                        <th class="ps-0 pb-0" style="font-weight: bold;">Deadline:</th>
-                        <td class="pb-0" t-esc="sale_order.license_plate.strftime('%d.%m.%Y')"/>
-                    </tr>
-
-                    <tr t-if="sale_order.vin" style="font-size: 14px;">
-                        <th class="ps-0 pb-0" style="font-weight: bold;">Deadline:</th>
-                        <td class="pb-0" t-esc="sale_order.vin.strftime('%d.%m.%Y')"/>
-                    </tr>
-
-
-                    <tr t-if="sale_order.master_number" style="font-size: 14px;">
-                        <th class="ps-0 pb-0" style="font-weight: bold;">Deadline:</th>
-                        <td class="pb-0" t-esc="sale_order.master_number.strftime('%d.%m.%Y')"/>
-                    </tr>
--->
-
-
-                </tbody>
-            </table>
+<!--                            <tr>
+                                <th>Last Service:</th>
+                                <td><span t-field="o.last_service_date" t-options='{"widget":"date"}'/></td>
+                                <th>Year:</th>
+                                <td><span t-field="o.year"/></td>
+                            </tr>-->
+                        </tbody>
+                    </table>
+                </div>
+            </t>
         </xpath>
     </template>
-
-
 
 </odoo>
 

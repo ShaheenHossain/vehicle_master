@@ -1,5 +1,8 @@
 from odoo import models, fields, api, _
-
+from odoo.exceptions import ValidationError
+import base64
+import imghdr
+import re
 
 class VehicleMaster(models.Model):
     _name = 'vehicle.master'
@@ -9,38 +12,82 @@ class VehicleMaster(models.Model):
     partner_id = fields.Many2one('res.partner', string='Owner', required=True)
 
     your_ref = fields.Many2one('res.partner', string='Your Ref')
-    our_ref = fields.Many2one('res.partner', string='Our Ref')
+    # our_ref = fields.Many2one('res.partner', string='Our Ref')
+
+    our_ref = fields.Many2one('res.partner', string='Our Ref', domain="[('employee_ids', '!=', False)]")
 
 
-    brand_id = fields.Many2one('vehicle.brand', string='Brand')
-    model_id = fields.Many2one('vehicle.model', string='Model', domain="[('brand_id','=',brand_id)]")
     year = fields.Selection([(str(y), str(y)) for y in range(1980, 2031)], string='Year')
     year_from = fields.Integer(string="Year From")
     year_to = fields.Integer(string="Year To")
-    # variant = fields.Char(string='Variant')
-    variant_id = fields.Many2one('vehicle.variant', string='Variant', domain="[('model_id','=',model_id)]")
-    license_plate = fields.Char(string='License Plate', required=True)
-    vin = fields.Char(string='VIN/Chassis Number')
+
+    # license_plate = fields.Char(string='License Plate', required=True)
+    # vin = fields.Char(string='VIN/Chassis Number')
     color_id = fields.Many2one('vehicle.color', string='Color')
+
+    brand_id = fields.Many2one('vehicle.brand', string='Brand')
+    model_id = fields.Many2one('vehicle.model', string='Model/Series', domain="[('brand_id', '=', brand_id)]")
+    chassis_id = fields.Many2one('vehicle.chassis', string='Chassis Code', domain="[('model_id', '=', model_id)]")
+    body_style_id = fields.Many2one('vehicle.body', string='Body Style', domain="[('model_id', '=', model_id)]")  # Linked to Model for flexibility
+    variant_id = fields.Many2one('vehicle.variant', string='Variant',  domain="[('model_id', '=', model_id)]")  # Linked to Model for flexibility
+
+    name = fields.Char(string='Vehicle Name', compute='_compute_vehicle_name', store=True)
+
+    plate_scan_temp = fields.Binary(string="Capture Plate")
+
+    @api.depends('brand_id', 'model_id', 'chassis_id', 'body_style_id', 'variant_id')
+    def _compute_vehicle_name(self):
+        for vehicle in self:
+            parts = []
+            if vehicle.brand_id: parts.append(vehicle.brand_id.name)
+            if vehicle.model_id: parts.append(vehicle.model_id.name)
+            if vehicle.chassis_id: parts.append(vehicle.chassis_id.name)
+            if vehicle.body_style_id: parts.append(vehicle.body_style_id.name)
+            if vehicle.variant_id: parts.append(vehicle.variant_id.name)
+            vehicle.name = " ".join(parts) if parts else vehicle.license_plate
+
+    # Onchanges to clear sub-fields if parent changes (Good UX)
+    @api.onchange('brand_id')
+    def _onchange_brand(self):
+        self.model_id = False
+
+    @api.onchange('model_id')
+    def _onchange_model(self):
+        self.chassis_id = False
+        self.body_style_id = False
+        self.variant_id = False
+
+    def action_scan_plate(self):
+        """
+        Placeholder for License Plate OCR scan.
+        In Odoo Mobile, this can trigger camera actions.
+        """
+        return True
+
+    def action_scan_vin(self):
+        """
+        Placeholder for VIN Barcode scan.
+        """
+        return True
 
     # fuel_type = fields.Char(string='Fuel Type')
 
-    def name_get(self):
-        result = []
-        for vehicle in self:
-            name_parts = []
-            if vehicle.brand_id:
-                name_parts.append(vehicle.brand_id.name)
-            if vehicle.model_id:
-                name_parts.append(vehicle.model_id.name)
-            if vehicle.variant_id:
-                name_parts.append(vehicle.variant_id.name)
-            if vehicle.year:
-                name_parts.append(vehicle.year)
-            # Combine all parts
-            full_name = ' '.join(name_parts)
-            result.append((vehicle.id, full_name))
-        return result
+    # def name_get(self):
+    #     result = []
+    #     for vehicle in self:
+    #         name_parts = []
+    #         if vehicle.brand_id:
+    #             name_parts.append(vehicle.brand_id.name)
+    #         if vehicle.model_id:
+    #             name_parts.append(vehicle.model_id.name)
+    #         if vehicle.variant_id:
+    #             name_parts.append(vehicle.variant_id.name)
+    #         if vehicle.year:
+    #             name_parts.append(vehicle.year)
+    #         # Combine all parts
+    #         full_name = ' '.join(name_parts)
+    #         result.append((vehicle.id, full_name))
+    #     return result
 
 
     fuel_type = fields.Selection(
@@ -57,45 +104,126 @@ class VehicleMaster(models.Model):
     )
 
 
-
     first_registration = fields.Date(string='First Registration')
     mileage = fields.Integer(string='Mileage')
 
-    type_code = fields.Char(string='Type Code')
+    # type_code = fields.Char(string='Type Code')
     # master_number = fields.Char(string='Master Number')
-    master_number = fields.Char(string='Master Number', readonly=True, copy=False)
     last_service_date = fields.Date(string='Last Service Date')
 
     vehicle_id = fields.Many2one('vehicle.master', string="Vehicle")
 
-    name = fields.Char(string='Vehicle Name', compute='_compute_vehicle_name', store=True)
+    # master_number = fields.Char(string='Master Number', readonly=True, copy=False)
 
-    @api.depends('brand_id', 'model_id', 'year', 'year')
-    def _compute_vehicle_name(self):
+
+
+    # @api.model
+    # def create(self, vals):
+    #     if not vals.get('master_number'):
+    #         vals['master_number'] = self._generate_master_number()
+    #     return super(VehicleMaster, self).create(vals)
+    #
+    #
+    # @api.model
+    # def _generate_master_number(self):
+    #     last_vehicle = self.search([], order='id desc', limit=1)
+    #     if last_vehicle and last_vehicle.master_number:
+    #         last = last_vehicle.master_number.replace('.', '')
+    #         new = str(int(last) + 1).zfill(9)  # 9 digits
+    #     else:
+    #         new = '000000001'
+    #     return f"{new[:3]}.{new[3:6]}.{new[6:]}"
+
+    # Vehicle Photos (Front, Back, Side)
+    image_front = fields.Image(string="Front View", max_width=1920, max_height=1080)
+    image_back = fields.Image(string="Back View", max_width=1920, max_height=1080)
+    image_side = fields.Image(string="Side View", max_width=1920, max_height=1080)
+
+    # 2. Constraint to block PDF and allow only PNG/JPG
+    @api.constrains('image_front', 'image_back', 'image_side')
+    def _check_image_type(self):
+        for record in self:
+            for field_name in ['image_front', 'image_back', 'image_side']:
+                image_data = record[field_name]
+                if image_data:
+                    # Decode base64 to check the header
+                    decoded_data = base64.b64decode(image_data)
+                    extension = imghdr.what(None, h=decoded_data)
+
+                    # imghdr returns 'jpeg' or 'png' for valid images
+                    valid_types = ['jpeg', 'png']
+
+                    if extension not in valid_types:
+                        raise ValidationError(_(
+                            "Invalid file format for %s! Only JPG and PNG are allowed. PDFs are strictly prohibited."
+                        ) % record._fields[field_name].string)
+
+
+
+
+
+    license_plate = fields.Char(
+        string='License Plate',
+        #required=True,
+        placeholder="e.g. ZH 123456",
+        help="The Swiss cantonal registration plate (Kontrollschild)."
+    )
+
+    vin = fields.Char(
+        string='VIN/Chassis Number',
+        placeholder="17-digit VIN",
+        help="Vehicle Identification Number (Fahrgestellnummer) found on the dash or door pillar."
+    )
+
+    type_code = fields.Char(
+        string='Type Code',
+        placeholder="e.g. 1VC644",
+        help="Swiss Type Approval (Typengenehmigung) found in Box 24 of the grey card."
+    )
+
+
+
+    master_number = fields.Char(
+        string='Stammnummer',
+        help="Format: 000.000.000 (Official Swiss vehicle number)",
+        copy=False,
+        placeholder='e.g., 123.456.789'
+    )
+
+    # 2. Add a constraint to ensure the format is correct (XXX.XXX.XXX)
+    @api.constrains('master_number')
+    def _check_stammnummer_format(self):
+        for record in self:
+            if record.master_number:
+                # Regex to check for 3 digits, dot, 3 digits, dot, 3 digits
+                pattern = r'^\d{3}\.\d{3}\.\d{3}$'
+                if not re.match(pattern, record.master_number):
+                    raise ValidationError(_(
+                        "The Stammnummer (Master Number) must be in the format 000.000.000"
+                    ))
+
+    # 3. Clean the input (if user types 618578306, automatically add the dots)
+    @api.onchange('master_number')
+    def _onchange_master_number(self):
+        if self.master_number:
+            # Remove everything except numbers
+            digits = re.sub(r'\D', '', self.master_number)
+            if len(digits) == 9:
+                self.master_number = f"{digits[:3]}.{digits[3:6]}.{digits[6:]}"
+
+
+    _sql_constraints = [
+        ('master_number_unique', 'unique(master_number)', 'This Stammnummer already exists in the system!')
+    ]
+
+    def name_get(self):
+        result = []
         for vehicle in self:
-            brand = vehicle.brand_id.name if vehicle.brand_id else 'Brand'
-            model = vehicle.model_id.name if vehicle.model_id else 'Model'
-            variant = vehicle.variant_id.name if vehicle.variant_id else 'variant'
-            year = vehicle.year or ''
-            vehicle.name = f"{brand} {model} {variant} {year}".strip()
-
-
-    @api.model
-    def create(self, vals):
-        if not vals.get('master_number'):
-            vals['master_number'] = self._generate_master_number()
-        return super(VehicleMaster, self).create(vals)
-
-
-    @api.model
-    def _generate_master_number(self):
-        last_vehicle = self.search([], order='id desc', limit=1)
-        if last_vehicle and last_vehicle.master_number:
-            last = last_vehicle.master_number.replace('.', '')
-            new = str(int(last) + 1).zfill(9)  # 9 digits
-        else:
-            new = '000000001'
-        return f"{new[:3]}.{new[3:6]}.{new[6:]}"
+            name = f"[{vehicle.license_plate}] {vehicle.brand_id.name or ''} {vehicle.model_id.name or ''}"
+            if vehicle.master_number:
+                name += f" - {vehicle.master_number}"
+            result.append((vehicle.id, name))
+        return result
 
 
 
@@ -111,6 +239,9 @@ class ResPartner(models.Model):
     _inherit = 'res.partner'
 
     vehicle_ids = fields.One2many('vehicle.master', 'partner_id', string='Vehicles')
+    date_of_birth = fields.Date(string="Date of Birth")
+    insurance_company = fields.Char(string="Insurance Company")
+    whatsapp_no = fields.Char(string="WhatsApp No.")
 
 
 class VehicleBrand(models.Model):
@@ -149,6 +280,42 @@ class VehicleModel(models.Model):
     ]
 
 
+
+class VehicleChassis(models.Model):
+    _name = 'vehicle.chassis'
+    _description = 'Chassis Code'
+
+    name = fields.Char(string="Chassis Code", required=True)
+    # model_id = fields.Many2one('vehicle.model', string="Model") # Linked to Model
+
+    model_id = fields.Many2one('vehicle.model', required=True, ondelete='cascade' )
+
+    _sql_constraints = [
+        (
+            'chassis_unique',
+            'unique(name, model_id)',
+            'Chassis already exists for this model!'
+        )
+    ]
+
+class VehicleBody(models.Model):
+    _name = 'vehicle.body'
+    _description = 'Body Style'
+
+    name = fields.Char(string="Body Style", required=True)
+    # model_id = fields.Many2one('vehicle.model', string="Model") # Linked to Model
+    model_id = fields.Many2one('vehicle.model', required=True, ondelete='cascade' )
+
+    _sql_constraints = [
+        (
+            'body_unique',
+            'unique(name, model_id)',
+            'Body style already exists for this model!'
+        )
+    ]
+
+
+
 class VehicleVariant(models.Model):
     _name = 'vehicle.variant'
     _description = 'Vehicle Variant'
@@ -164,3 +331,5 @@ class VehicleVariant(models.Model):
          'unique(name, model_id)',
          'Variant already exists for this model!')
     ]
+
+
