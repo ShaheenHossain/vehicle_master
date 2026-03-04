@@ -185,6 +185,39 @@ class VehicleMaster(models.Model):
             result.append((vehicle.id, name))
         return result
 
+    #
+    # @api.model
+    # def _name_search(self, name='', args=None, operator='ilike', limit=100, order=None):
+    #     args = args or []
+    #     if name:
+    #         # This adds the partner_id.name to the global search logic
+    #         domain = ['|', '|', '|', '|', '|',
+    #             ('vin', operator, name),
+    #             ('license_plate', operator, name),
+    #             ('brand_id.name', operator, name),
+    #             ('model_id.name', operator, name),
+    #             ('partner_id.name', operator, name), # Search by Owner
+    #             ('name', operator, name)
+    #         ]
+    #         args = expression.AND([args, domain])
+    #     return super()._name_search(name=name, args=args, operator=operator, limit=limit, order=order)
+
+    @api.model
+    def _name_search(self, name='', args=None, operator='ilike', limit=100):
+        args = args or []
+
+        if name:
+            args = expression.AND([args, [
+                '|', '|', '|', '|',
+                ('partner_id.name', operator, name),
+                ('brand_id.name', operator, name),
+                ('model_id.name', operator, name),
+                ('master_number', operator, name),
+                ('license_plate', operator, name),
+            ]])
+
+        return super()._name_search(name, args, operator, limit)
+
 
 
 class VehicleColor(models.Model):
@@ -233,12 +266,15 @@ class VehicleModel(models.Model):
     name = fields.Char(string="Model Name", required=True)
     brand_id = fields.Many2one('vehicle.brand', string="Brand", required=True, ondelete='cascade')
 
+    chassis_ids = fields.One2many('vehicle.chassis', 'model_id', string="Chassis Codes")
+    body_style_ids = fields.One2many('vehicle.body', 'model_id', string="Body Styles")
+    variant_ids = fields.One2many('vehicle.variant', 'model_id', string="Variants")
+
     _sql_constraints = [
         ('model_brand_unique',
          'unique(name, brand_id)',
          'Model already exists for this brand!')
     ]
-
 
 
 class VehicleChassis(models.Model):
@@ -275,7 +311,6 @@ class VehicleBody(models.Model):
     ]
 
 
-
 class VehicleVariant(models.Model):
     _name = 'vehicle.variant'
     _description = 'Vehicle Variant'
@@ -291,5 +326,4 @@ class VehicleVariant(models.Model):
          'unique(name, model_id)',
          'Variant already exists for this model!')
     ]
-
 
