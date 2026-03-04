@@ -1,64 +1,36 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <odoo>
-<!--
-   <record id="view_vehicle_master_search" model="ir.ui.view">
-    <field name="name">vehicle.master.search</field>
-    <field name="model">vehicle.master</field>
-    <field name="arch" type="xml">
-        <search string="Search Vehicles">
-            <field name="name" string="Vehicle or Owner"
-                   filter_domain="['|', '|', ('name', 'ilike', self), ('partner_id.name', 'ilike', self), ('license_plate', 'ilike', self)]"/>
-
-            <field name="partner_id" string="Owner"/>
-            <field name="brand_id"/>
-            <field name="model_id"/>
-            <field name="master_number"/>
-            <field name="license_plate"/>
-            <field name="vin"/>
-
-            <separator/>
-            <filter string="My Vehicles" name="my_vehicles" domain="[('our_ref.user_id', '=', uid)]"/>
-
-            <group expand="0" string="Group By">
-                <filter string="Owner" name="group_partner" context="{'group_by':'partner_id'}"/>
-                <filter string="Brand" name="group_brand" context="{'group_by':'brand_id'}"/>
-                <filter string="Model" name="group_model" context="{'group_by':'model_id'}"/>
-                <filter string="Fuel Type" name="group_fuel" context="{'group_by':'fuel_type'}"/>
-            </group>
-        </search>
-    </field>
-</record>-->
 
     <record id="view_vehicle_master_search" model="ir.ui.view">
-    <field name="name">vehicle.master.search</field>
-    <field name="model">vehicle.master</field>
-    <field name="arch" type="xml">
-        <search string="Search Vehicles">
-            <field name="name" string="Vehicle, Owner, Plate, VIN or Stammnummer"
-                   filter_domain="['|', '|', '|', '|',
+        <field name="name">vehicle.master.search</field>
+        <field name="model">vehicle.master</field>
+        <field name="arch" type="xml">
+            <search string="Search Vehicles">
+                <field name="name" string="Vehicle, Owner, Plate, VIN or Stammnummer"
+                       filter_domain="['|', '|', '|', '|',
                                    ('name', 'ilike', self),
                                    ('partner_id.name', 'ilike', self),
                                    ('license_plate', 'ilike', self),
                                    ('vin', 'ilike', self),
                                    ('master_number', 'ilike', self)]"/>
 
-            <field name="partner_id" string="Owner"/>
-            <field name="license_plate"/>
-            <field name="vin" string="VIN/Chassis"/>
-            <field name="master_number" string="Stammnummer"/>
-            <field name="brand_id"/>
-            <field name="model_id"/>
+                <field name="partner_id" string="Owner"/>
+                <field name="license_plate"/>
+                <field name="vin" string="VIN/Chassis"/>
+                <field name="master_number" string="Stammnummer"/>
+                <field name="brand_id"/>
+                <field name="model_id"/>
 
-            <separator/>
+                <separator/>
 
-            <group expand="0" string="Group By">
-                <filter string="Owner" name="group_partner" context="{'group_by':'partner_id'}"/>
-                <filter string="Brand" name="group_brand" context="{'group_by':'brand_id'}"/>
-                <filter string="Model" name="group_model" context="{'group_by':'model_id'}"/>
-            </group>
-        </search>
-    </field>
-</record>
+                <group expand="0" string="Group By">
+                    <filter string="Owner" name="group_partner" context="{'group_by':'partner_id'}"/>
+                    <filter string="Brand" name="group_brand" context="{'group_by':'brand_id'}"/>
+                    <filter string="Model" name="group_model" context="{'group_by':'model_id'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
 
 
 
@@ -150,24 +122,24 @@
                         </group>
 
                         <group string="Technical &amp; Swiss Data">
-  <!--                          <label for="license_plate"/>
-                            <div class="o_row">
-                                <field name="license_plate" placeholder="e.g. ZH 123456"/>
-                                <button name="action_scan_plate" type="object" string="Process OCR"
-                                        icon="fa-refresh" class="btn-link"
-                                        invisible="not plate_scan_temp"/>
-                            </div>
+                            <!--                          <label for="license_plate"/>
+                                                      <div class="o_row">
+                                                          <field name="license_plate" placeholder="e.g. ZH 123456"/>
+                                                          <button name="action_scan_plate" type="object" string="Process OCR"
+                                                                  icon="fa-refresh" class="btn-link"
+                                                                  invisible="not plate_scan_temp"/>
+                                                      </div>
 
-                            <field name="plate_scan_temp" widget="image" string="Scan Plate"
-                                   options="{'accepted_file_extensions': 'image/*', 'preview_image': 'plate_scan_temp'}"
-                                   class="oe_avatar" help="Tap to open camera and snap the license plate"/>
+                                                      <field name="plate_scan_temp" widget="image" string="Scan Plate"
+                                                             options="{'accepted_file_extensions': 'image/*', 'preview_image': 'plate_scan_temp'}"
+                                                             class="oe_avatar" help="Tap to open camera and snap the license plate"/>
 
-                            <label for="vin"/>
-                            <div class="o_row">
-                                <field name="vin" widget="barcode" placeholder="Scan or type VIN"/>
-                                <button name="action_scan_vin" type="object" string="Manual Scan" icon="fa-barcode" class="btn-primary"/>
-                            </div>
--->
+                                                      <label for="vin"/>
+                                                      <div class="o_row">
+                                                          <field name="vin" widget="barcode" placeholder="Scan or type VIN"/>
+                                                          <button name="action_scan_vin" type="object" string="Manual Scan" icon="fa-barcode" class="btn-primary"/>
+                                                      </div>
+                          -->
                             <field name="license_plate"/>
                             <field name="vin"/>
 
@@ -227,7 +199,33 @@
         </field>
     </record>
 
-<!--    <record id="view_vehicle_brand_form" model="ir.ui.view">
+    <!--    <record id="view_vehicle_brand_form" model="ir.ui.view">
+            <field name="name">vehicle.brand.form</field>
+            <field name="model">vehicle.brand</field>
+            <field name="arch" type="xml">
+                <form>
+                    <sheet>
+                        <field name="logo" widget="image" class="oe_avatar" options="{'preview_image': 'logo'}"/>
+                        <div class="oe_title">
+                            <label for="name"/>
+                            <h1><field name="name"/></h1>
+                        </div>
+                        <notebook>
+                            <page string="Models">
+                                <field name="model_ids">
+                                    <tree editable="bottom">
+                                        <field name="name"/>
+                                    </tree>
+                                </field>
+                            </page>
+                        </notebook>
+                    </sheet>
+                </form>
+            </field>
+        </record>-->
+
+
+    <record id="view_vehicle_brand_form" model="ir.ui.view">
         <field name="name">vehicle.brand.form</field>
         <field name="model">vehicle.brand</field>
         <field name="arch" type="xml">
@@ -236,78 +234,52 @@
                     <field name="logo" widget="image" class="oe_avatar" options="{'preview_image': 'logo'}"/>
                     <div class="oe_title">
                         <label for="name"/>
-                        <h1><field name="name"/></h1>
+                        <h1><field name="name" placeholder="e.g. Toyota"/></h1>
                     </div>
                     <notebook>
-                        <page string="Models">
+                        <page string="Models &amp; Configuration">
                             <field name="model_ids">
-                                <tree editable="bottom">
+                                <tree>
                                     <field name="name"/>
+                                    <field name="variant_ids" widget="many2many_tags" string="Available Variants"/>
                                 </tree>
+                                <form>
+                                    <group>
+                                        <field name="name"/>
+                                    </group>
+                                    <notebook>
+                                        <page string="Chassis Codes">
+                                            <field name="chassis_ids">
+                                                <tree editable="bottom">
+                                                    <field name="name"/>
+                                                </tree>
+                                            </field>
+                                        </page>
+                                        <page string="Body Styles">
+                                            <field name="body_style_ids">
+                                                <tree editable="bottom">
+                                                    <field name="name"/>
+                                                </tree>
+                                            </field>
+                                        </page>
+                                        <page string="Variants">
+                                            <field name="variant_ids">
+                                                <tree editable="bottom">
+                                                    <field name="name"/>
+                                                    <field name="year_from"/>
+                                                    <field name="year_to"/>
+                                                </tree>
+                                            </field>
+                                        </page>
+                                    </notebook>
+                                </form>
                             </field>
                         </page>
                     </notebook>
                 </sheet>
             </form>
         </field>
-    </record>-->
-
-
-<record id="view_vehicle_brand_form" model="ir.ui.view">
-    <field name="name">vehicle.brand.form</field>
-    <field name="model">vehicle.brand</field>
-    <field name="arch" type="xml">
-        <form>
-            <sheet>
-                <field name="logo" widget="image" class="oe_avatar" options="{'preview_image': 'logo'}"/>
-                <div class="oe_title">
-                    <label for="name"/>
-                    <h1><field name="name" placeholder="e.g. Toyota"/></h1>
-                </div>
-                <notebook>
-                    <page string="Models &amp; Configuration">
-                        <field name="model_ids">
-                            <tree>
-                                <field name="name"/>
-                                <field name="variant_ids" widget="many2many_tags" string="Available Variants"/>
-                            </tree>
-                            <form>
-                                <group>
-                                    <field name="name"/>
-                                </group>
-                                <notebook>
-                                    <page string="Chassis Codes">
-                                        <field name="chassis_ids">
-                                            <tree editable="bottom">
-                                                <field name="name"/>
-                                            </tree>
-                                        </field>
-                                    </page>
-                                    <page string="Body Styles">
-                                        <field name="body_style_ids">
-                                            <tree editable="bottom">
-                                                <field name="name"/>
-                                            </tree>
-                                        </field>
-                                    </page>
-                                    <page string="Variants">
-                                        <field name="variant_ids">
-                                            <tree editable="bottom">
-                                                <field name="name"/>
-                                                <field name="year_from"/>
-                                                <field name="year_to"/>
-                                            </tree>
-                                        </field>
-                                    </page>
-                                </notebook>
-                            </form>
-                        </field>
-                    </page>
-                </notebook>
-            </sheet>
-        </form>
-    </field>
-</record>
+    </record>
 
 
     <record id="vehicle_brand_view_kanban" model="ir.ui.view">
@@ -333,7 +305,7 @@
         </field>
     </record>
 
-        <record id="action_vehicle_master" model="ir.actions.act_window">
+    <record id="action_vehicle_master" model="ir.actions.act_window">
         <field name="name">Vehicles</field>
         <field name="res_model">vehicle.master</field>
         <field name="view_mode">tree,form</field>

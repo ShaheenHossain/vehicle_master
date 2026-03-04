@@ -122,26 +122,9 @@ class VehicleMaster(models.Model):
 
 
 
-    license_plate = fields.Char(
-        string='License Plate',
-        #required=True,
-        placeholder="e.g. ZH 123456",
-        help="The Swiss cantonal registration plate (Kontrollschild)."
-    )
-
-    vin = fields.Char(
-        string='VIN/Chassis Number',
-        placeholder="17-digit VIN",
-        help="Vehicle Identification Number (Fahrgestellnummer) found on the dash or door pillar."
-    )
-
-    type_code = fields.Char(
-        string='Type Code',
-        placeholder="e.g. 1VC644",
-        help="Swiss Type Approval (Typengenehmigung) found in Box 24 of the grey card."
-    )
-
-
+    license_plate = fields.Char(string='License Plate', placeholder="e.g. ZH 123456", help="The Swiss cantonal registration plate (Kontrollschild).")
+    vin = fields.Char(string='VIN/Chassis Number', placeholder="17-digit VIN", help="Vehicle Identification Number (Fahrgestellnummer) found on the dash or door pillar.")
+    type_code = fields.Char(string='Type Code', placeholder="e.g. 1VC644", help="Swiss Type Approval (Typengenehmigung) found in Box 24 of the grey card.")
 
     master_number = fields.Char(
         string='Stammnummer',
@@ -185,22 +168,6 @@ class VehicleMaster(models.Model):
             result.append((vehicle.id, name))
         return result
 
-    #
-    # @api.model
-    # def _name_search(self, name='', args=None, operator='ilike', limit=100, order=None):
-    #     args = args or []
-    #     if name:
-    #         # This adds the partner_id.name to the global search logic
-    #         domain = ['|', '|', '|', '|', '|',
-    #             ('vin', operator, name),
-    #             ('license_plate', operator, name),
-    #             ('brand_id.name', operator, name),
-    #             ('model_id.name', operator, name),
-    #             ('partner_id.name', operator, name), # Search by Owner
-    #             ('name', operator, name)
-    #         ]
-    #         args = expression.AND([args, domain])
-    #     return super()._name_search(name=name, args=args, operator=operator, limit=limit, order=order)
 
     @api.model
     def _name_search(self, name='', args=None, operator='ilike', limit=100):
